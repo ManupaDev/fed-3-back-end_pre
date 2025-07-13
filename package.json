@@ -1,5 +1,5 @@
 {
-  "name": "aidf-4-back-end",
+  "name": "fed-3-back-end",
   "version": "1.0.0",
   "scripts": {
     "dev": "nodemon src/index.ts",
