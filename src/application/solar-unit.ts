@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { solarUnitService } from "../infrastructure/solar-panel-api";
+import { solarPanelAPI } from "../infrastructure/solar-panel-api";
 import { 
   CreateSolarUnitDTO, 
   UpdateSolarUnitDTO, 
@@ -7,7 +7,6 @@ import {
   UpdateSolarUnitStatusDTO 
 } from "../domain/dtos/solar-unit";
 import ValidationError from "../domain/errors/validation-error";
-import NotFoundError from "../domain/errors/not-found-error";
 
 export const getAllSolarUnits = async (
   req: Request,
@@ -15,15 +14,11 @@ export const getAllSolarUnits = async (
   next: NextFunction
 ) => {
   try {
-    const solarUnits = await solarUnitService.getAllSolarUnits();
+    const solarUnits = await solarPanelAPI.solarUnits.getAll();
     res.status(200).json(solarUnits);
     return;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Solar units not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -34,15 +29,11 @@ export const getSolarUnitById = async (
 ) => {
   try {
     const { id } = req.params;
-    const solarUnit = await solarUnitService.getSolarUnitById(id);
+    const solarUnit = await solarPanelAPI.solarUnits.getById(id);
     res.status(200).json(solarUnit);
     return;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Solar unit not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -53,15 +44,11 @@ export const getSolarUnitsByUserId = async (
 ) => {
   try {
     const { userId } = req.params;
-    const solarUnits = await solarUnitService.getSolarUnitsByUserId(userId);
+    const solarUnits = await solarPanelAPI.solarUnits.getByUserId(userId);
     res.status(200).json(solarUnits);
     return;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Solar units not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -72,17 +59,11 @@ export const getSolarUnitsByStatus = async (
 ) => {
   try {
     const { status } = req.params;
-    const solarUnits = await solarUnitService.getSolarUnitsByStatus(status);
+    const solarUnits = await solarPanelAPI.solarUnits.getByStatus(status);
     res.status(200).json(solarUnits);
     return;
-  } catch (error: any) {
-    if (error.response?.status === 400) {
-      next(new ValidationError(error.response.data.message || "Invalid status"));
-    } else if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Solar units not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -92,15 +73,11 @@ export const getUnassignedSolarUnits = async (
   next: NextFunction
 ) => {
   try {
-    const solarUnits = await solarUnitService.getUnassignedSolarUnits();
+    const solarUnits = await solarPanelAPI.solarUnits.getUnassigned();
     res.status(200).json(solarUnits);
     return;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "No unassigned solar units found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -116,15 +93,11 @@ export const createSolarUnit = async (
       throw new ValidationError(validationResult.error.message);
     }
 
-    const solarUnit = await solarUnitService.createSolarUnit(validationResult.data);
-    res.status(201).json(solarUnit);
+    await solarPanelAPI.solarUnits.create(validationResult.data);
+    res.status(201).json({ message: "Solar unit created successfully" });
     return;
-  } catch (error: any) {
-    if (error.response?.status === 400) {
-      next(new ValidationError(error.response.data.message || "Invalid input data"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -141,17 +114,11 @@ export const updateSolarUnit = async (
       throw new ValidationError(validationResult.error.message);
     }
 
-    const solarUnit = await solarUnitService.updateSolarUnit(id, validationResult.data);
-    res.status(200).json(solarUnit);
+    await solarPanelAPI.solarUnits.update(id, validationResult.data);
+    res.status(200).json({ message: "Solar unit updated successfully" });
     return;
-  } catch (error: any) {
-    if (error.response?.status === 400) {
-      next(new ValidationError(error.response.data.message || "Invalid input data"));
-    } else if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Solar unit not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -168,17 +135,11 @@ export const updateSolarUnitStatus = async (
       throw new ValidationError(validationResult.error.message);
     }
 
-    const solarUnit = await solarUnitService.updateSolarUnitStatus(id, validationResult.data);
-    res.status(200).json(solarUnit);
+    await solarPanelAPI.solarUnits.updateStatus(id, validationResult.data);
+    res.status(200).json({ message: "Solar unit status updated successfully" });
     return;
-  } catch (error: any) {
-    if (error.response?.status === 400) {
-      next(new ValidationError(error.response.data.message || "Invalid status"));
-    } else if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Solar unit not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -195,17 +156,11 @@ export const assignUserToSolarUnit = async (
       throw new ValidationError(validationResult.error.message);
     }
 
-    const solarUnit = await solarUnitService.assignUserToSolarUnit(id, validationResult.data);
-    res.status(200).json(solarUnit);
+    await solarPanelAPI.solarUnits.assignUser(id, validationResult.data);
+    res.status(200).json({ message: "User assigned to solar unit successfully" });
     return;
-  } catch (error: any) {
-    if (error.response?.status === 400) {
-      next(new ValidationError(error.response.data.message || "Invalid user ID"));
-    } else if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Solar unit not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -216,15 +171,11 @@ export const unassignUserFromSolarUnit = async (
 ) => {
   try {
     const { id } = req.params;
-    const solarUnit = await solarUnitService.unassignUserFromSolarUnit(id);
-    res.status(200).json(solarUnit);
+    await solarPanelAPI.solarUnits.unassignUser(id);
+    res.status(200).json({ message: "User unassigned from solar unit successfully" });
     return;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Solar unit not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -235,14 +186,10 @@ export const deleteSolarUnit = async (
 ) => {
   try {
     const { id } = req.params;
-    await solarUnitService.deleteSolarUnit(id);
-    res.status(204).send();
+    await solarPanelAPI.solarUnits.delete(id);
+    res.status(200).json({ message: "Solar unit deleted successfully" });
     return;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Solar unit not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 }; 

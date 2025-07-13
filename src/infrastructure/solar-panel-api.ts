@@ -1,184 +1,431 @@
-import { 
-  CreateSolarUnitDTOType, 
-  UpdateSolarUnitDTOType, 
-  AssignUserToSolarUnitDTOType, 
-  UpdateSolarUnitStatusDTOType 
+import {
+  CreateSolarUnitDTOType,
+  UpdateSolarUnitDTOType,
+  AssignUserToSolarUnitDTOType,
+  UpdateSolarUnitStatusDTOType,
 } from "../domain/dtos/solar-unit";
-import { 
-  CreateEnergyGenerationRecordDTOType, 
-  UpdateEnergyGenerationRecordDTOType, 
-  GetEnergyRecordsByDateRangeDTOType 
+import {
+  CreateEnergyGenerationRecordDTOType,
+  UpdateEnergyGenerationRecordDTOType,
+  GetEnergyRecordsByDateRangeDTOType,
 } from "../domain/dtos/energy-generation-record";
+import NotFoundError from "../domain/errors/not-found-error";
+import ValidationError from "../domain/errors/validation-error";
+import UnauthorizedError from "../domain/errors/unauthorized-error";
+import ForbiddenError from "../domain/errors/forbidden-error";
 
-const SOLAR_PANEL_API_BASE_URL = process.env.SOLAR_PANEL_API_URL || "http://localhost:8001";
+const SOLAR_PANEL_API_BASE_URL =
+  process.env.SOLAR_PANEL_API_URL || "http://localhost:8001";
 const SOLARPANEL_API_SECRET = process.env.SOLARPANEL_API_SECRET;
 
-// Helper function to make authenticated requests to solar panel API
-const makeRequest = async (endpoint: string, options: RequestInit = {}) => {
-  const url = `${SOLAR_PANEL_API_BASE_URL}${endpoint}`;
-  
-  const defaultHeaders = {
-    "Content-Type": "application/json",
-    ...(SOLARPANEL_API_SECRET && { Authorization: `Bearer ${SOLARPANEL_API_SECRET}` }),
-  };
+// Helper function to handle HTTP errors and throw appropriate domain errors
+const handleHttpError = async (response: Response) => {
+  const errorData = await response.json() as { message?: string };
+  const errorMessage = `Solar Panel API Error: ${errorData.message}`;
 
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-  });
-
-  if (!response.ok) {
-    const error = new Error(`HTTP error! status: ${response.status}`);
-    (error as any).response = {
-      status: response.status,
-      data: await response.json().catch(() => ({ message: response.statusText })),
-    };
-    throw error;
+  switch (response.status) {
+    case 400:
+      throw new ValidationError(errorMessage);
+    case 401:
+      throw new UnauthorizedError(errorMessage);
+    case 403:
+      throw new ForbiddenError(errorMessage);
+    case 404:
+      throw new NotFoundError(errorMessage);
+    default:
+      throw new Error(errorMessage);
   }
-
-  return response.json();
 };
 
-// Solar Unit API methods
-export const solarUnitService = {
-  // Get all solar units
-  getAllSolarUnits: async () => {
-    return await makeRequest("/api/solar-units");
+export const solarPanelAPI = {
+  solarUnits: {
+    getAll: async () => {
+      const response = await fetch(`${SOLAR_PANEL_API_BASE_URL}/api/solar-units`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+        },
+      });
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+
+      const data = await response.json();
+      return data;
+    },
+
+    create: async (data: CreateSolarUnitDTOType) => {
+      const response = await fetch(`${SOLAR_PANEL_API_BASE_URL}/api/solar-units`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+    },
+
+    getById: async (id: string) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/solar-units/${id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+
+      const data = await response.json();
+      return data;
+    },
+
+    getByUserId: async (userId: string) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/solar-units/user/${userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+
+      const data = await response.json();
+      return data;
+    },
+
+    getByStatus: async (status: string) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/solar-units/status/${status}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+
+      const data = await response.json();
+      return data;
+    },
+
+    getUnassigned: async () => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/solar-units/unassigned/list`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+
+      const data = await response.json();
+      return data;
+    },
+
+    update: async (id: string, data: UpdateSolarUnitDTOType) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/solar-units/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+    },
+
+    updateStatus: async (id: string, data: UpdateSolarUnitStatusDTOType) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/solar-units/${id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+    },
+
+    assignUser: async (id: string, data: AssignUserToSolarUnitDTOType) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/solar-units/${id}/assign`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+    },
+
+    unassignUser: async (id: string) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/solar-units/${id}/unassign`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+    },
+
+    delete: async (id: string) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/solar-units/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+    },
   },
 
-  // Get solar unit by ID
-  getSolarUnitById: async (id: string) => {
-    return await makeRequest(`/api/solar-units/${id}`);
-  },
+  energyRecords: {
+    create: async (data: CreateEnergyGenerationRecordDTOType) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/energy-records`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
-  // Get solar units by user ID
-  getSolarUnitsByUserId: async (userId: string) => {
-    return await makeRequest(`/api/solar-units/user/${userId}`);
-  },
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+    },
 
-  // Get solar units by status
-  getSolarUnitsByStatus: async (status: string) => {
-    return await makeRequest(`/api/solar-units/status/${status}`);
-  },
+    getById: async (id: string) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/energy-records/${id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
 
-  // Get unassigned solar units
-  getUnassignedSolarUnits: async () => {
-    return await makeRequest("/api/solar-units/unassigned/list");
-  },
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
 
-  // Create new solar unit
-  createSolarUnit: async (data: CreateSolarUnitDTOType) => {
-    return await makeRequest("/api/solar-units", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  },
+      const data = await response.json();
+      return data;
+    },
 
-  // Update solar unit
-  updateSolarUnit: async (id: string, data: UpdateSolarUnitDTOType) => {
-    return await makeRequest(`/api/solar-units/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-  },
+    update: async (id: string, data: UpdateEnergyGenerationRecordDTOType) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/energy-records/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
-  // Update solar unit status
-  updateSolarUnitStatus: async (id: string, data: UpdateSolarUnitStatusDTOType) => {
-    return await makeRequest(`/api/solar-units/${id}/status`, {
-      method: "PATCH",
-      body: JSON.stringify(data),
-    });
-  },
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+    },
 
-  // Assign user to solar unit
-  assignUserToSolarUnit: async (id: string, data: AssignUserToSolarUnitDTOType) => {
-    return await makeRequest(`/api/solar-units/${id}/assign`, {
-      method: "PATCH",
-      body: JSON.stringify(data),
-    });
-  },
+    delete: async (id: string) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/energy-records/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
 
-  // Unassign user from solar unit
-  unassignUserFromSolarUnit: async (id: string) => {
-    return await makeRequest(`/api/solar-units/${id}/unassign`, {
-      method: "PATCH",
-    });
-  },
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+    },
 
-  // Delete solar unit
-  deleteSolarUnit: async (id: string) => {
-    return await makeRequest(`/api/solar-units/${id}`, {
-      method: "DELETE",
-    });
+    getBySolarUnit: async (solarUnitId: string, page: number = 1, limit: number = 10) => {
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/energy-records/solar-unit/${solarUnitId}?${queryParams}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+
+      const data = await response.json();
+      return data;
+    },
+
+    getLatest: async (solarUnitId: string) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/energy-records/solar-unit/${solarUnitId}/latest`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+
+      const data = await response.json();
+      return data;
+    },
+
+    getTotalProduced: async (solarUnitId: string) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/energy-records/solar-unit/${solarUnitId}/total`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+
+      const data = await response.json();
+      return data;
+    },
+
+    getAnalytics: async (solarUnitId: string, period: string = "daily") => {
+      const queryParams = new URLSearchParams({ period });
+
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/energy-records/solar-unit/${solarUnitId}/analytics?${queryParams}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+
+      const data = await response.json();
+      return data;
+    },
+
+    getByDateRange: async (params: GetEnergyRecordsByDateRangeDTOType) => {
+      const queryParams = new URLSearchParams();
+      queryParams.append("startDate", params.startDate);
+      queryParams.append("endDate", params.endDate);
+      if (params.solarUnitId) {
+        queryParams.append("solarUnitId", params.solarUnitId);
+      }
+
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/energy-records/date-range?${queryParams}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+
+      const data = await response.json();
+      return data;
+    },
   },
 };
-
-// Energy Generation Record API methods
-export const energyRecordService = {
-  // Create new energy generation record
-  createEnergyRecord: async (data: CreateEnergyGenerationRecordDTOType) => {
-    return await makeRequest("/api/energy-records", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  },
-
-  // Get energy record by ID
-  getEnergyRecordById: async (id: string) => {
-    return await makeRequest(`/api/energy-records/${id}`);
-  },
-
-  // Update energy generation record
-  updateEnergyRecord: async (id: string, data: UpdateEnergyGenerationRecordDTOType) => {
-    return await makeRequest(`/api/energy-records/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-  },
-
-  // Delete energy generation record
-  deleteEnergyRecord: async (id: string) => {
-    return await makeRequest(`/api/energy-records/${id}`, {
-      method: "DELETE",
-    });
-  },
-
-  // Get energy records by solar unit
-  getEnergyRecordsBySolarUnit: async (solarUnitId: string, page: number = 1, limit: number = 10) => {
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-    });
-    return await makeRequest(`/api/energy-records/solar-unit/${solarUnitId}?${queryParams}`);
-  },
-
-  // Get latest energy record for a solar unit
-  getLatestEnergyRecord: async (solarUnitId: string) => {
-    return await makeRequest(`/api/energy-records/solar-unit/${solarUnitId}/latest`);
-  },
-
-  // Get total energy produced for a solar unit
-  getTotalEnergyProduced: async (solarUnitId: string) => {
-    return await makeRequest(`/api/energy-records/solar-unit/${solarUnitId}/total`);
-  },
-
-  // Get energy analytics
-  getEnergyAnalytics: async (solarUnitId: string, period: string = "daily") => {
-    const queryParams = new URLSearchParams({ period });
-    return await makeRequest(`/api/energy-records/solar-unit/${solarUnitId}/analytics?${queryParams}`);
-  },
-
-  // Get energy records by date range
-  getEnergyRecordsByDateRange: async (params: GetEnergyRecordsByDateRangeDTOType) => {
-    const queryParams = new URLSearchParams();
-    queryParams.append("startDate", params.startDate);
-    queryParams.append("endDate", params.endDate);
-    if (params.solarUnitId) {
-      queryParams.append("solarUnitId", params.solarUnitId);
-    }
-    return await makeRequest(`/api/energy-records/date-range?${queryParams}`);
-  },
-}; 

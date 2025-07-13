@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { energyRecordService } from "../infrastructure/solar-panel-api";
+import { solarPanelAPI } from "../infrastructure/solar-panel-api";
 import { 
   CreateEnergyGenerationRecordDTO, 
   UpdateEnergyGenerationRecordDTO, 
@@ -7,7 +7,6 @@ import {
   GetEnergyRecordsBySolarUnitDTO
 } from "../domain/dtos/energy-generation-record";
 import ValidationError from "../domain/errors/validation-error";
-import NotFoundError from "../domain/errors/not-found-error";
 
 export const createEnergyGenerationRecord = async (
   req: Request,
@@ -21,17 +20,11 @@ export const createEnergyGenerationRecord = async (
       throw new ValidationError(validationResult.error.message);
     }
 
-    const energyRecord = await energyRecordService.createEnergyRecord(validationResult.data);
-    res.status(201).json(energyRecord);
+    await solarPanelAPI.energyRecords.create(validationResult.data);
+    res.status(201).json({ message: "Energy generation record created successfully" });
     return;
-  } catch (error: any) {
-    if (error.response?.status === 400) {
-      next(new ValidationError(error.response.data.message || "Invalid input data"));
-    } else if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Solar unit not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -42,15 +35,11 @@ export const getEnergyRecordById = async (
 ) => {
   try {
     const { id } = req.params;
-    const energyRecord = await energyRecordService.getEnergyRecordById(id);
+    const energyRecord = await solarPanelAPI.energyRecords.getById(id);
     res.status(200).json(energyRecord);
     return;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Energy record not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -67,17 +56,11 @@ export const updateEnergyGenerationRecord = async (
       throw new ValidationError(validationResult.error.message);
     }
 
-    const energyRecord = await energyRecordService.updateEnergyRecord(id, validationResult.data);
-    res.status(200).json(energyRecord);
+    await solarPanelAPI.energyRecords.update(id, validationResult.data);
+    res.status(200).json({ message: "Energy generation record updated successfully" });
     return;
-  } catch (error: any) {
-    if (error.response?.status === 400) {
-      next(new ValidationError(error.response.data.message || "Invalid input data"));
-    } else if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Energy record not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -88,15 +71,11 @@ export const deleteEnergyGenerationRecord = async (
 ) => {
   try {
     const { id } = req.params;
-    await energyRecordService.deleteEnergyRecord(id);
-    res.status(204).send();
+    await solarPanelAPI.energyRecords.delete(id);
+    res.status(200).json({ message: "Energy generation record deleted successfully" });
     return;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Energy record not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -114,15 +93,11 @@ export const getEnergyRecordsBySolarUnit = async (
     }
 
     const { page, limit } = validationResult.data;
-    const energyRecords = await energyRecordService.getEnergyRecordsBySolarUnit(solarUnitId, page, limit);
+    const energyRecords = await solarPanelAPI.energyRecords.getBySolarUnit(solarUnitId, page, limit);
     res.status(200).json(energyRecords);
     return;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "Energy records not found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -133,15 +108,11 @@ export const getLatestEnergyRecord = async (
 ) => {
   try {
     const { solarUnitId } = req.params;
-    const energyRecord = await energyRecordService.getLatestEnergyRecord(solarUnitId);
+    const energyRecord = await solarPanelAPI.energyRecords.getLatest(solarUnitId);
     res.status(200).json(energyRecord);
     return;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "No energy records found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -152,15 +123,11 @@ export const getTotalEnergyProduced = async (
 ) => {
   try {
     const { solarUnitId } = req.params;
-    const totalEnergy = await energyRecordService.getTotalEnergyProduced(solarUnitId);
+    const totalEnergy = await solarPanelAPI.energyRecords.getTotalProduced(solarUnitId);
     res.status(200).json(totalEnergy);
     return;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "No energy records found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -172,15 +139,11 @@ export const getEnergyAnalytics = async (
   try {
     const { solarUnitId } = req.params;
     const { period } = req.query;
-    const analytics = await energyRecordService.getEnergyAnalytics(solarUnitId, period as string);
+    const analytics = await solarPanelAPI.energyRecords.getAnalytics(solarUnitId, period as string);
     res.status(200).json(analytics);
     return;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "No energy records found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -196,16 +159,10 @@ export const getEnergyRecordsByDateRange = async (
       throw new ValidationError(validationResult.error.message);
     }
 
-    const energyRecords = await energyRecordService.getEnergyRecordsByDateRange(validationResult.data);
+    const energyRecords = await solarPanelAPI.energyRecords.getByDateRange(validationResult.data);
     res.status(200).json(energyRecords);
     return;
-  } catch (error: any) {
-    if (error.response?.status === 400) {
-      next(new ValidationError(error.response.data.message || "Invalid date range"));
-    } else if (error.response?.status === 404) {
-      next(new NotFoundError(error.response.data.message || "No energy records found"));
-    } else {
-      next(error);
-    }
+  } catch (error) {
+    next(error);
   }
 }; 
