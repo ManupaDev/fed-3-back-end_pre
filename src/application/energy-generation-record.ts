@@ -153,13 +153,15 @@ export const getEnergyRecordsByDateRange = async (
   next: NextFunction
 ) => {
   try {
+    const { solarUnitId } = req.params;
     const validationResult = GetEnergyRecordsByDateRangeDTO.safeParse(req.query);
     
     if (!validationResult.success) {
       throw new ValidationError(validationResult.error.message);
     }
 
-    const energyRecords = await solarPanelAPI.energyRecords.getByDateRange(validationResult.data);
+    const { startDate, endDate } = validationResult.data;
+    const energyRecords = await solarPanelAPI.energyRecords.getByDateRange(solarUnitId, startDate, endDate);
     res.status(200).json(energyRecords);
     return;
   } catch (error) {

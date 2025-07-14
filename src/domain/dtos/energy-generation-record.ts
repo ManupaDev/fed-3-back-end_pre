@@ -17,7 +17,6 @@ export const UpdateEnergyGenerationRecordDTO = z.object({
 export const GetEnergyRecordsByDateRangeDTO = z.object({
   startDate: z.string().datetime(),
   endDate: z.string().datetime(),
-  solarUnitId: z.string().optional(),
 });
 
 export const GetEnergyRecordsBySolarUnitDTO = z.object({

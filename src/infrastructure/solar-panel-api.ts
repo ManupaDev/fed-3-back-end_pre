@@ -401,16 +401,13 @@ export const solarPanelAPI = {
       return data;
     },
 
-    getByDateRange: async (params: GetEnergyRecordsByDateRangeDTOType) => {
+    getByDateRange: async (solarUnitId: string, startDate: string, endDate: string) => {
       const queryParams = new URLSearchParams();
-      queryParams.append("startDate", params.startDate);
-      queryParams.append("endDate", params.endDate);
-      if (params.solarUnitId) {
-        queryParams.append("solarUnitId", params.solarUnitId);
-      }
+      queryParams.append("startDate", startDate);
+      queryParams.append("endDate", endDate);
 
       const response = await fetch(
-        `${SOLAR_PANEL_API_BASE_URL}/api/energy-records/date-range?${queryParams}`,
+        `${SOLAR_PANEL_API_BASE_URL}/api/energy-records/solar-unit/${solarUnitId}/date-range?${queryParams}`,
         {
           method: "GET",
           headers: {
