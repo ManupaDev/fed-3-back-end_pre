@@ -1,15 +1,14 @@
 import { Router } from "express";
 import {
   createEnergyGenerationRecord,
-  getEnergyRecordsBySolarUnit,
-  getEnergyRecordsByDateRange,
-  getEnergyRecordById,
-  updateEnergyGenerationRecord,
   deleteEnergyGenerationRecord,
-  getLatestEnergyRecord,
   getEnergyAnalytics,
+  getEnergyRecordById,
+  getEnergyRecordsByDateRange,
+  getEnergyRecordsBySolarUnit,
+  getLatestEnergyRecord,
   getTotalEnergyProduced,
-  syncEnergyRecordsFromTimestamp,
+  updateEnergyGenerationRecord
 } from "../application/energy-generation-record";
 import { isAuthenticated } from "./middlewares/authentication-middleware";
 import { isAdmin } from "./middlewares/authorization-middleware";
@@ -42,8 +41,5 @@ router.get("/solar-unit/:solarUnitId/analytics", isAuthenticated, getEnergyAnaly
 
 // Get energy records by date range for a specific solar unit (authenticated users only)
 router.get("/solar-unit/:solarUnitId/date-range", isAuthenticated, getEnergyRecordsByDateRange);
-
-// Sync energy records from solar panel API service from a given timestamp (admin only)
-router.post("/solar-unit/:solarUnitId/sync", isAuthenticated, isAdmin, syncEnergyRecordsFromTimestamp);
 
 export default router; 
