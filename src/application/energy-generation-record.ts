@@ -1,17 +1,16 @@
 import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
 
-import EnergyGenerationRecord from "../infrastructure/schemas/EnergyGenerationRecord";
-import SolarUnit from "../infrastructure/schemas/SolarUnit";
+import {
+  CreateEnergyGenerationRecordDTO,
+  GetEnergyRecordsByDateRangeDTO,
+  GetEnergyRecordsBySolarUnitDTO,
+  UpdateEnergyGenerationRecordDTO
+} from "../domain/dtos/energy-generation-record";
 import NotFoundError from "../domain/errors/not-found-error";
 import ValidationError from "../domain/errors/validation-error";
-import { 
-  CreateEnergyGenerationRecordDTO, 
-  UpdateEnergyGenerationRecordDTO,
-  GetEnergyRecordsByDateRangeDTO,
-  GetEnergyRecordsBySolarUnitDTO
-} from "../domain/dtos/energy-generation-record";
-import { solarPanelAPI } from "../infrastructure/solar-panel-api";
+import EnergyGenerationRecord from "../infrastructure/schemas/EnergyGenerationRecord";
+import SolarUnit from "../infrastructure/schemas/SolarUnit";
 
 // Type definitions for internal use
 interface EnergyRecordData {

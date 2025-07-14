@@ -12,6 +12,7 @@ import {
 } from "../application/energy-generation-record";
 import { isAuthenticated } from "./middlewares/authentication-middleware";
 import { isAdmin } from "./middlewares/authorization-middleware";
+import { syncEnergyRecords } from "./middlewares/energy-record-sync-middleware";
 
 const router = Router();
 
@@ -28,7 +29,7 @@ router.put("/:id", isAuthenticated, isAdmin, updateEnergyGenerationRecord);
 router.delete("/:id", isAuthenticated, isAdmin, deleteEnergyGenerationRecord);
 
 // Get energy records by solar unit with pagination (authenticated users only)
-router.get("/solar-unit/:solarUnitId", isAuthenticated, getEnergyRecordsBySolarUnit);
+router.get("/solar-unit/:solarUnitId", isAuthenticated, syncEnergyRecords,getEnergyRecordsBySolarUnit);
 
 // Get latest energy record for a solar unit (authenticated users only)
 router.get("/solar-unit/:solarUnitId/latest", isAuthenticated, getLatestEnergyRecord);
@@ -40,6 +41,6 @@ router.get("/solar-unit/:solarUnitId/total", isAuthenticated, getTotalEnergyProd
 router.get("/solar-unit/:solarUnitId/analytics", isAuthenticated, getEnergyAnalytics);
 
 // Get energy records by date range for a specific solar unit (authenticated users only)
-router.get("/solar-unit/:solarUnitId/date-range", isAuthenticated, getEnergyRecordsByDateRange);
+router.get("/solar-unit/:solarUnitId/date-range", isAuthenticated, syncEnergyRecords, getEnergyRecordsByDateRange);
 
 export default router; 
