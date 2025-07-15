@@ -76,6 +76,7 @@ export const createSolarUnit = async (
 
     // Create the solar unit
     const solarUnit = new SolarUnit({
+      _id: solarUnitData._id,
       userId: solarUnitData.userId,
       serialNumber: solarUnitData.serialNumber,
       installationDate: solarUnitData.installationDate,

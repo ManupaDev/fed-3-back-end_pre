@@ -9,6 +9,7 @@ export const GetSolarUnitsByUserIdDTO = z.object({
 });
 
 export const CreateSolarUnitDTO = z.object({
+  _id: z.string().optional(),
   userId: z.string().min(1, "User ID is required").optional(),
   serialNumber: z.string().min(1, "Serial number is required"),
   installationDate: z

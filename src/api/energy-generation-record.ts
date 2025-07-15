@@ -29,7 +29,7 @@ router.put("/:id", isAuthenticated, isAdmin, updateEnergyGenerationRecord);
 router.delete("/:id", isAuthenticated, isAdmin, deleteEnergyGenerationRecord);
 
 // Get energy records by solar unit with pagination (authenticated users only)
-router.get("/solar-unit/:solarUnitId", isAuthenticated, syncEnergyRecords,getEnergyRecordsBySolarUnit);
+router.get("/solar-unit/:solarUnitId", isAuthenticated, syncEnergyRecords, getEnergyRecordsBySolarUnit);
 
 // Get latest energy record for a solar unit (authenticated users only)
 router.get("/solar-unit/:solarUnitId/latest", isAuthenticated, getLatestEnergyRecord);
