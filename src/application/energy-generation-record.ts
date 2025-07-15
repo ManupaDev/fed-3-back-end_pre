@@ -5,7 +5,7 @@ import {
   CreateEnergyGenerationRecordDTO,
   GetEnergyRecordsByDateRangeDTO,
   GetEnergyRecordsBySolarUnitDTO,
-  UpdateEnergyGenerationRecordDTO
+  UpdateEnergyGenerationRecordDTO,
 } from "../domain/dtos/energy-generation-record";
 import NotFoundError from "../domain/errors/not-found-error";
 import ValidationError from "../domain/errors/validation-error";
@@ -52,7 +52,9 @@ export const createEnergyGenerationRecord = async (
   next: NextFunction
 ) => {
   try {
-    const validationResult = CreateEnergyGenerationRecordDTO.safeParse(req.body);
+    const validationResult = CreateEnergyGenerationRecordDTO.safeParse(
+      req.body
+    );
 
     if (!validationResult.success) {
       throw new ValidationError(validationResult.error.message);
@@ -94,8 +96,10 @@ export const getEnergyRecordsBySolarUnit = async (
 ) => {
   try {
     const { solarUnitId } = req.params;
-    const validationResult = GetEnergyRecordsBySolarUnitDTO.safeParse(req.query);
-    
+    const validationResult = GetEnergyRecordsBySolarUnitDTO.safeParse(
+      req.query
+    );
+
     if (!validationResult.success) {
       throw new ValidationError(validationResult.error.message);
     }
@@ -106,9 +110,11 @@ export const getEnergyRecordsBySolarUnit = async (
       .sort({ timestamp: -1 })
       .limit(Number(limit))
       .skip((Number(page) - 1) * Number(limit))
-      .populate('solarUnitId', 'serialNumber capacity');
+      .populate("solarUnitId", "serialNumber capacity");
 
-    const totalRecords = await EnergyGenerationRecord.countDocuments({ solarUnitId });
+    const totalRecords = await EnergyGenerationRecord.countDocuments({
+      solarUnitId,
+    });
 
     res.status(200).json({
       records,
@@ -132,7 +138,9 @@ export const getEnergyRecordsByDateRange = async (
 ) => {
   try {
     const { solarUnitId } = req.params;
-    const validationResult = GetEnergyRecordsByDateRangeDTO.safeParse(req.query);
+    const validationResult = GetEnergyRecordsByDateRangeDTO.safeParse(
+      req.query
+    );
 
     if (!validationResult.success) {
       throw new ValidationError(validationResult.error.message);
@@ -157,7 +165,7 @@ export const getEnergyRecordsByDateRange = async (
 
     const records = await EnergyGenerationRecord.find(filter)
       .sort({ timestamp: -1 })
-      .populate('solarUnitId', 'serialNumber capacity');
+      .populate("solarUnitId", "serialNumber capacity");
 
     res.status(200).json(records);
     return;
@@ -173,8 +181,10 @@ export const getEnergyRecordById = async (
 ) => {
   try {
     const { id } = req.params;
-    const record = await EnergyGenerationRecord.findById(id)
-      .populate('solarUnitId', 'serialNumber capacity status');
+    const record = await EnergyGenerationRecord.findById(id).populate(
+      "solarUnitId",
+      "serialNumber capacity status"
+    );
 
     if (!record) {
       throw new NotFoundError("Energy generation record not found");
@@ -194,7 +204,9 @@ export const updateEnergyGenerationRecord = async (
 ) => {
   try {
     const { id } = req.params;
-    const validationResult = UpdateEnergyGenerationRecordDTO.safeParse(req.body);
+    const validationResult = UpdateEnergyGenerationRecordDTO.safeParse(
+      req.body
+    );
 
     if (!validationResult.success) {
       throw new ValidationError(validationResult.error.message);
@@ -206,7 +218,7 @@ export const updateEnergyGenerationRecord = async (
       id,
       updateData,
       { new: true, runValidators: true }
-    ).populate('solarUnitId', 'serialNumber capacity');
+    ).populate("solarUnitId", "serialNumber capacity");
 
     if (!updatedRecord) {
       throw new NotFoundError("Energy generation record not found");
@@ -232,7 +244,9 @@ export const deleteEnergyGenerationRecord = async (
       throw new NotFoundError("Energy generation record not found");
     }
 
-    res.status(200).json({ message: "Energy generation record deleted successfully" });
+    res
+      .status(200)
+      .json({ message: "Energy generation record deleted successfully" });
     return;
   } catch (error) {
     next(error);
@@ -249,10 +263,12 @@ export const getLatestEnergyRecord = async (
 
     const latestRecord = await EnergyGenerationRecord.findOne({ solarUnitId })
       .sort({ timestamp: -1 })
-      .populate('solarUnitId', 'serialNumber capacity');
+      .populate("solarUnitId", "serialNumber capacity");
 
     if (!latestRecord) {
-      throw new NotFoundError("No energy generation records found for this solar unit");
+      throw new NotFoundError(
+        "No energy generation records found for this solar unit"
+      );
     }
 
     res.status(200).json(latestRecord);
@@ -269,32 +285,34 @@ export const getEnergyAnalytics = async (
 ) => {
   try {
     const { solarUnitId } = req.params;
-    const { period = 'daily' } = req.query; // daily, weekly, monthly
+    const { period = "daily" } = req.query; // daily, weekly, monthly
 
     // Define date grouping based on period
     let groupBy: GroupBy;
     switch (period) {
-      case 'daily':
+      case "daily":
         groupBy = {
-          year: { $year: '$timestamp' },
-          month: { $month: '$timestamp' },
-          day: { $dayOfMonth: '$timestamp' },
+          year: { $year: "$timestamp" },
+          month: { $month: "$timestamp" },
+          day: { $dayOfMonth: "$timestamp" },
         };
         break;
-      case 'weekly':
+      case "weekly":
         groupBy = {
-          year: { $year: '$timestamp' },
-          week: { $week: '$timestamp' },
+          year: { $year: "$timestamp" },
+          week: { $week: "$timestamp" },
         };
         break;
-      case 'monthly':
+      case "monthly":
         groupBy = {
-          year: { $year: '$timestamp' },
-          month: { $month: '$timestamp' },
+          year: { $year: "$timestamp" },
+          month: { $month: "$timestamp" },
         };
         break;
       default:
-        throw new ValidationError("Invalid period. Use 'daily', 'weekly', or 'monthly'");
+        throw new ValidationError(
+          "Invalid period. Use 'daily', 'weekly', or 'monthly'"
+        );
     }
 
     const analytics = await EnergyGenerationRecord.aggregate([
@@ -302,14 +320,21 @@ export const getEnergyAnalytics = async (
       {
         $group: {
           _id: groupBy,
-          totalEnergyProduced: { $sum: '$energyProduced' },
+          totalEnergyProduced: { $sum: "$energyProduced" },
           recordCount: { $sum: 1 },
-          maxEnergyProduced: { $max: '$energyProduced' },
-          minEnergyProduced: { $min: '$energyProduced' },
-          averageEnergyProduced: { $avg: '$energyProduced' },
+          maxEnergyProduced: { $max: "$energyProduced" },
+          minEnergyProduced: { $min: "$energyProduced" },
+          averageEnergyProduced: { $avg: "$energyProduced" },
         },
       },
-      { $sort: { '_id.year': -1, '_id.month': -1, '_id.day': -1, '_id.week': -1 } },
+      {
+        $sort: {
+          "_id.year": -1,
+          "_id.month": -1,
+          "_id.day": -1,
+          "_id.week": -1,
+        },
+      },
       { $limit: 30 }, // Limit to last 30 periods
     ]);
 
@@ -336,17 +361,19 @@ export const getTotalEnergyProduced = async (
       {
         $group: {
           _id: null,
-          totalEnergyProduced: { $sum: '$energyProduced' },
+          totalEnergyProduced: { $sum: "$energyProduced" },
           totalRecords: { $sum: 1 },
-          averageEnergyProduced: { $avg: '$energyProduced' },
-          firstRecord: { $min: '$timestamp' },
-          lastRecord: { $max: '$timestamp' },
+          averageEnergyProduced: { $avg: "$energyProduced" },
+          firstRecord: { $min: "$timestamp" },
+          lastRecord: { $max: "$timestamp" },
         },
       },
     ]);
 
     if (totalStats.length === 0) {
-      throw new NotFoundError("No energy generation records found for this solar unit");
+      throw new NotFoundError(
+        "No energy generation records found for this solar unit"
+      );
     }
 
     res.status(200).json(totalStats[0]);
@@ -354,4 +381,4 @@ export const getTotalEnergyProduced = async (
   } catch (error) {
     next(error);
   }
-}; 
+};

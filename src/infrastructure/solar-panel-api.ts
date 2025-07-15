@@ -2,6 +2,8 @@ import NotFoundError from "../domain/errors/not-found-error";
 import ValidationError from "../domain/errors/validation-error";
 import UnauthorizedError from "../domain/errors/unauthorized-error";
 import ForbiddenError from "../domain/errors/forbidden-error";
+import { z } from "zod";
+import { GetSolarUnitsByUserIdDTO } from "../domain/dtos/solar-unit";
 
 const SOLAR_PANEL_API_BASE_URL =
   process.env.SOLAR_PANEL_API_URL || "http://localhost:8001";
@@ -9,7 +11,7 @@ const SOLARPANEL_API_SECRET = process.env.SOLARPANEL_API_SECRET;
 
 // Helper function to handle HTTP errors and throw appropriate domain errors
 const handleHttpError = async (response: Response) => {
-  const errorData = await response.json() as { message?: string };
+  const errorData = (await response.json()) as { message?: string };
   const errorMessage = `Solar Panel API Error: ${errorData.message}`;
 
   switch (response.status) {
@@ -50,7 +52,57 @@ export const solarPanelAPI = {
       }
 
       const data = await response.json();
-      return data;
+      return data as {
+        _id: string;
+        solarUnitId: string;
+        timestamp: Date;
+        energyProduced: number;
+        intervalHours: number;
+        status: string;
+      }[];
+    },
+    getAll: async (solarUnitId: string) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/energy-records/solar-unit/${solarUnitId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+      const data = await response.json();
+      return data as {
+        _id: string;
+        solarUnitId: string;
+        timestamp: Date;
+        energyProduced: number;
+        intervalHours: number;
+        status: string;
+      }[];
+    },
+  },
+  solarUnits: {
+    getByUserId: async (userId: string) => {
+      const response = await fetch(
+        `${SOLAR_PANEL_API_BASE_URL}/api/solar-units/user/${userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SOLARPANEL_API_SECRET}`,
+          },
+        }
+      );
+      if (!response.ok) {
+        await handleHttpError(response);
+      }
+      const data = await response.json();
+      return data as z.infer<typeof GetSolarUnitsByUserIdDTO>[];
     },
   },
 };

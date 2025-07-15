@@ -24,10 +24,23 @@ export const syncEnergyRecords = async (
   const latestRecord = await EnergyGenerationRecord.findOne({
     solarUnitId: solarUnit._id,
   }).sort({ timestamp: -1 });
+
   if (!latestRecord) {
-    throw new NotFoundError(
-      "No energy generation records found for this solar unit"
+    const energyRecords = await solarPanelAPI.energyRecords.getAll(
+      solarUnit._id.toString()
     );
+
+    await EnergyGenerationRecord.insertMany(
+      energyRecords.map((record) => ({
+        _id: record._id,
+        solarUnitId: solarUnit._id,
+        timestamp: record.timestamp,
+        energyProduced: record.energyProduced,
+        intervalHours: record.intervalHours,
+      }))
+    );
+    next();
+    return;
   }
 
   const energyRecords = await solarPanelAPI.energyRecords.syncFromTimestamp(
@@ -35,8 +48,15 @@ export const syncEnergyRecords = async (
     latestRecord.timestamp
   );
 
-  console.log(energyRecords);
-
+  await EnergyGenerationRecord.insertMany(
+    energyRecords.map((record) => ({
+      _id: record._id,
+      solarUnitId: solarUnit._id,
+      timestamp: record.timestamp,
+      energyProduced: record.energyProduced,
+      intervalHours: record.intervalHours,
+    }))
+  );
   next();
   //   await EnergyGenerationRecord.insertMany(energyRecords.map);
 };
