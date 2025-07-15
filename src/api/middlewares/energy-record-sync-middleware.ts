@@ -48,6 +48,14 @@ export const syncEnergyRecords = async (
     latestRecord.timestamp
   );
 
+  if (
+    new Date(energyRecords.at(-1)!.timestamp).getTime() ===
+    latestRecord.timestamp.getTime()
+  ) {
+    next();
+    return;
+  }
+
   await EnergyGenerationRecord.insertMany(
     energyRecords.map((record) => ({
       _id: record._id,
@@ -58,5 +66,4 @@ export const syncEnergyRecords = async (
     }))
   );
   next();
-  //   await EnergyGenerationRecord.insertMany(energyRecords.map);
 };
